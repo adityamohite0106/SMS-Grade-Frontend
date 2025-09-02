@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
+// Fix: Use environment variable for production, fallback to localhost for development
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 function App() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(true);
   const [message, setMessage] = useState('');
   const [editingStudent, setEditingStudent] = useState(null);
 
@@ -15,11 +17,19 @@ function App() {
   }, []);
 
   const fetchStudents = async () => {
+    setFetchingData(true);
+    setMessage('');
     try {
       const response = await axios.get(`${API_URL}/api/students`);
       setStudents(response.data);
+      if (response.data.length === 0) {
+        setMessage('No students found. Upload a file to get started.');
+      }
     } catch (error) {
-      setMessage('Failed to fetch students');
+      console.error('Fetch error:', error);
+      setMessage('Failed to connect to server. Please check if backend is running.');
+    } finally {
+      setFetchingData(false);
     }
   };
 
@@ -31,6 +41,7 @@ function App() {
     formData.append('file', file);
 
     setLoading(true);
+    setMessage('');
     try {
       const response = await axios.post(`${API_URL}/api/upload`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
@@ -38,7 +49,8 @@ function App() {
       setMessage(`Success! Uploaded ${response.data.count} students`);
       fetchStudents();
     } catch (error) {
-      setMessage('Failed to upload file');
+      console.error('Upload error:', error);
+      setMessage('Failed to upload file - Check backend connection');
     }
     setLoading(false);
   };
@@ -54,6 +66,7 @@ function App() {
       setEditingStudent(null);
       fetchStudents();
     } catch (error) {
+      console.error('Update error:', error);
       setMessage('Failed to update student');
     }
   };
@@ -65,6 +78,7 @@ function App() {
         setMessage('Student deleted successfully');
         fetchStudents();
       } catch (error) {
+        console.error('Delete error:', error);
         setMessage('Failed to delete student');
       }
     }
@@ -74,12 +88,14 @@ function App() {
     <div className="App">
       <header className="app-header">
         <h1>Student Grade Management System</h1>
+        <p>Current API URL: {API_URL}</p>
       </header>
 
       <main className="main-content">
         {/* File Upload Section */}
         <div className="upload-section">
           <h2>Upload Student Data</h2>
+          <p>Supported formats: Excel (.xlsx) and CSV (.csv)</p>
           <input
             type="file"
             accept=".xlsx,.csv"
