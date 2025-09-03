@@ -216,7 +216,87 @@
   background-color: #5a6268;
 }
 
-/* Responsive Design */
+/* Upload History Styles */
+.history-section {
+  margin-bottom: 30px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.toggle-history-btn {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.toggle-history-btn:hover {
+  background-color: #138496;
+}
+
+.history-content {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 14px;
+}
+
+.history-table th,
+.history-table td {
+  border: 1px solid #ddd;
+  padding: 10px 8px;
+  text-align: left;
+}
+
+.history-table th {
+  background-color: #e9ecef;
+  font-weight: bold;
+}
+
+.success-row {
+  background-color: #f8fff8;
+}
+
+.error-row {
+  background-color: #fff8f8;
+}
+
+.status.success {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.status.error {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.no-history {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+  font-style: italic;
+}
 @media (max-width: 768px) {
   .App {
     padding: 10px;

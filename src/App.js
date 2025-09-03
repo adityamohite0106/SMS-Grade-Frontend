@@ -7,13 +7,17 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 function App() {
   const [students, setStudents] = useState([]);
+  const [uploadHistory, setUploadHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
+  const [fetchingHistory, setFetchingHistory] = useState(true);
   const [message, setMessage] = useState('');
   const [editingStudent, setEditingStudent] = useState(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     fetchStudents();
+    fetchUploadHistory();
   }, []);
 
   const fetchStudents = async () => {
@@ -33,6 +37,18 @@ function App() {
     }
   };
 
+  const fetchUploadHistory = async () => {
+    setFetchingHistory(true);
+    try {
+      const response = await axios.get(`${API_URL}/api/upload-history`);
+      setUploadHistory(response.data);
+    } catch (error) {
+      console.error('Fetch history error:', error);
+    } finally {
+      setFetchingHistory(false);
+    }
+  };
+
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -48,6 +64,7 @@ function App() {
       });
       setMessage(`Success! Uploaded ${response.data.count} students`);
       fetchStudents();
+      fetchUploadHistory(); // Refresh history after upload
     } catch (error) {
       console.error('Upload error:', error);
       setMessage('Failed to upload file - Check backend connection');
@@ -106,10 +123,71 @@ function App() {
           {message && <p className={message.includes('Success') ? 'success' : 'error'}>{message}</p>}
         </div>
 
+        {/* Upload History Section */}
+        <div className="history-section">
+          <div className="history-header">
+            <h2>Upload History</h2>
+            <button 
+              onClick={() => setShowHistory(!showHistory)}
+              className="toggle-history-btn"
+            >
+              {showHistory ? 'Hide History' : 'Show History'}
+            </button>
+          </div>
+          
+          {showHistory && (
+            <div className="history-content">
+              {fetchingHistory ? (
+                <div className="loading-container">
+                  <div className="spinner"></div>
+                  <p>Loading upload history...</p>
+                </div>
+              ) : uploadHistory.length > 0 ? (
+                <table className="history-table">
+                  <thead>
+                    <tr>
+                      <th>Date & Time</th>
+                      <th>Filename</th>
+                      <th>Type</th>
+                      <th>Students</th>
+                      <th>Size</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {uploadHistory.map((upload, index) => (
+                      <tr key={index} className={upload.status === 'error' ? 'error-row' : 'success-row'}>
+                        <td>{new Date(upload.upload_date).toLocaleString()}</td>
+                        <td>{upload.filename}</td>
+                        <td>{upload.file_type}</td>
+                        <td>{upload.students_count}</td>
+                        <td>{(upload.file_size / 1024).toFixed(1)} KB</td>
+                        <td>
+                          <span className={`status ${upload.status}`}>
+                            {upload.status === 'success' ? '✅ Success' : '❌ Failed'}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="no-history">No upload history found.</p>
+              )}
+            </div>
+          )}
+        </div>
+
         {/* Students Table */}
         <div className="students-section">
           <h2>Students ({students.length})</h2>
-          {students.length > 0 ? (
+          
+          {fetchingData ? (
+            <div className="loading-container">
+              <div className="spinner"></div>
+              <p>Loading students data...</p>
+            </div>
+          ) : students.length > 0 ? (
             <table className="students-table">
               <thead>
                 <tr>
@@ -138,7 +216,12 @@ function App() {
               </tbody>
             </table>
           ) : (
-            <p>No students found. Upload an Excel or CSV file to get started.</p>
+            <div className="no-data">
+              <p>No students found. Upload an Excel or CSV file to get started.</p>
+              <button onClick={fetchStudents} className="retry-btn">
+                Retry Connection
+              </button>
+            </div>
           )}
         </div>
 
